@@ -1,6 +1,6 @@
 name: onboardly
 description: A Flutter package for creating beautiful and customizable onboarding experiences with spotlight effects and interactive tooltips.
-version: 1.0.1
+version: 1.0.2
 homepage: https://github.com/lucas-sesti/onboardly
 repository: https://github.com/lucas-sesti/onboardly
 issue_tracker: https://github.com/lucas-sesti/onboardly/issues
