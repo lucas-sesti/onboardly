@@ -27,7 +27,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  onboardly: ^0.0.1
+  onboardly: ^1.0.2
   provider: ^6.1.2
 ```
 
