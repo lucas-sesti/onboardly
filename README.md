@@ -272,15 +272,11 @@ SpotlightStyle(
 
 ## Examples
 
-Check the [example](example/example.dart) folder for a complete working example with:
+Check the [example](example/lib/main.dart) folder for a complete working example with:
 - Full onboarding flow with 6 steps
 - Quick onboarding with 2 steps
 - Spotlight-only mode
 - Custom callbacks and styling
-
-## Migration from GetX
-
-If you're upgrading from a previous version that used GetX, please see the [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed migration instructions.
 
 ## Contributing
 
