@@ -4,14 +4,22 @@ A Flutter package for creating beautiful and customizable onboarding experiences
 
 ## Features
 
-✅ **Spotlight Effect** - Highlight specific UI elements with customizable overlays
-✅ **Interactive Tooltips** - Show descriptive tooltips with customizable positioning
-✅ **Step-by-step Onboarding** - Guide users through multiple steps
-✅ **Provider-based State Management** - Clean and testable architecture
-✅ **Fully Customizable** - Custom styles, colors, animations, and layouts
-✅ **Skip Confirmation** - Built-in bottom sheet for skip confirmation
-✅ **Callbacks** - Track onboarding progress with callbacks
-✅ **Zero External Dependencies** - Only uses Provider and Flutter SDK
+- ✅ **Spotlight Effect** - Highlight specific UI elements with customizable overlays
+- ✅ **Interactive Tooltips** - Show descriptive tooltips with customizable positioning
+- ✅ **Step-by-step Onboarding** - Guide users through multiple steps
+- ✅ **Provider-based State Management** - Clean and testable architecture
+- ✅ **Fully Customizable** - Custom styles, colors, animations, and layouts
+- ✅ **Skip Confirmation** - Built-in bottom sheet for skip confirmation
+- ✅ **Callbacks** - Track onboarding progress with callbacks
+- ✅ **Zero External Dependencies** - Only uses Provider and Flutter SDK
+
+## Demo
+
+<div align="center">
+  <img src="https://res.cloudinary.com/seeken/image/upload/v1772667403/RocketSim_Recording_iPhone_Air_6.6_2026-03-05_00.35.40-ezgif.com-video-to-gif-converter_o0lvas.gif" alt="Onboardly Demo" width="300">
+  <br/>
+  <img src="https://res.cloudinary.com/seeken/image/upload/v1772667170/RocketSim_Screenshot_iPhone_Air_6.6_2026-03-05_00.07.35_lzadlj.jpg" alt="Onboardly Screenshot" width="300">
+</div>
 
 ## Installation
 
