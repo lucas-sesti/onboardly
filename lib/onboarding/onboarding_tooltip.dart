@@ -3,15 +3,33 @@ import 'package:flutter/material.dart';
 
 import 'onboarding_step.dart';
 
+/// Widget that displays an onboarding tooltip with description and action buttons.
+///
+/// The tooltip appears near the highlighted target widget and can be positioned
+/// above, below, or at the center of the screen.
 class OnboardingTooltip extends StatefulWidget {
+  /// The onboarding step configuration.
   final OnboardingStep step;
+
+  /// The screen rectangle of the target widget being highlighted.
   final Rect targetRect;
+
+  /// Whether to show the tooltip above the target (true) or below (false).
   final bool showAbove;
+
+  /// Whether this is the last step in the onboarding flow.
   final bool isLastStep;
+
+  /// Callback invoked when the user taps the "Next" or "OK" button.
   final VoidCallback onNext;
+
+  /// Callback invoked when the user taps the "Skip" button.
   final VoidCallback onSkip;
+
+  /// Optional callback that provides the tooltip's path for spotlight cutouts.
   final void Function(Path combinedPath)? onLayout;
 
+  /// Creates an onboarding tooltip.
   const OnboardingTooltip({
     super.key,
     required this.targetRect,
@@ -517,10 +535,15 @@ class _TooltipCardState extends State<_TooltipCard> {
   }
 }
 
+/// A triangular arrow widget used to point from tooltip to target.
 class TooltipArrow extends StatelessWidget {
+  /// Whether the arrow points upward (true) or downward (false).
   final bool pointUp;
+
+  /// The color of the arrow.
   final Color color;
 
+  /// Creates a tooltip arrow.
   const TooltipArrow({
     super.key,
     required this.pointUp,

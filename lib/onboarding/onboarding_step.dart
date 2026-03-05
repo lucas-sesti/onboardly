@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Where the tooltip should appear relative to the target.
 enum OnboardingTooltipPosition { auto, above, below, center }
 
+/// Position of the tooltip arrow relative to the tooltip container.
 enum ArrowPosition {
   topLeft,
   topCenter,
@@ -12,13 +13,30 @@ enum ArrowPosition {
   bottomRight
 }
 
+/// Represents a single step in the onboarding flow.
+///
+/// Each step highlights one or more target widgets with a spotlight effect
+/// and displays a tooltip with information for the user.
 class OnboardingStep {
+  /// The primary widget to highlight in this step.
   final GlobalKey targetKey;
+
+  /// Additional widgets to highlight alongside the primary target.
   final List<GlobalKey>? extraTargetKeys;
+
+  /// Text description to display in the tooltip.
   final String? description;
+
+  /// Custom widget to display in the tooltip instead of [description].
   final Widget? descriptionWidget;
+
+  /// Whether to show the "Next" button in the tooltip.
   final bool showNext;
+
+  /// Whether to show the "Skip" button in the tooltip.
   final bool showSkip;
+
+  /// Where the tooltip should appear relative to the target.
   final OnboardingTooltipPosition position;
   final Map<GlobalKey, OnboardingTooltipPosition>? keyPositions;
   final Map<GlobalKey, double>? maxHeights;
@@ -42,8 +60,12 @@ class OnboardingStep {
   final List<GlobalKey>? arrowAnchorKeys;
   final List<ArrowPosition>? arrowPositions;
 
+  /// Returns all target keys for this step (primary + extras).
   List<GlobalKey> get allTargetKeys => [targetKey, ...?extraTargetKeys];
 
+  /// Creates an onboarding step with the given configuration.
+  ///
+  /// Either [description] or [descriptionWidget] must be provided.
   const OnboardingStep({
     required this.targetKey,
     this.extraTargetKeys,

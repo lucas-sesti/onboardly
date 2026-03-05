@@ -9,9 +9,16 @@ import 'onboarding_skip_sheet.dart';
 import 'onboarding_step.dart';
 import 'onboarding_tooltip.dart';
 
+/// Service that manages the onboarding flow with spotlight effects and tooltips.
+///
+/// This service orchestrates the display of onboarding steps, each with a
+/// spotlight effect highlighting specific UI elements and tooltips providing
+/// contextual information to users.
 class OnboardingService extends ChangeNotifier {
+  /// Creates an [OnboardingService] with the given [spotlight] service.
   OnboardingService(this.spotlight);
 
+  /// The spotlight service used to highlight target widgets during onboarding.
   final SpotlightService spotlight;
   static const double _kDefaultSpotlightHorizontalPadding = 8;
   static const double _kDefaultSpotlightVerticalPadding = 8;
@@ -32,7 +39,10 @@ class OnboardingService extends ChangeNotifier {
 
   late List<OnboardingStep> steps;
 
+  /// Returns the current onboarding step being displayed.
   OnboardingStep get currentStep => steps[_currentIndex];
+
+  /// Whether the onboarding flow is currently active.
   bool get isActive => _isActive;
 
   Path? _tooltipPath;
@@ -44,9 +54,22 @@ class OnboardingService extends ChangeNotifier {
       _kDefaultSpotlightHorizontalPadding;
   FlutterExceptionHandler? _originalOnError;
 
+  /// The current target widget's rectangle on screen, or null if not measured.
   Rect? get currentTargetRect => _currentTargetRect;
+
+  /// Whether the skip confirmation sheet is currently open.
   bool get isSkipSheetOpen => _isSkipSheetOpen;
 
+  /// Starts the onboarding flow with the given [onboardingSteps].
+  ///
+  /// The [context] is used to insert overlay entries for tooltips and spotlights.
+  /// Optional callbacks can be provided:
+  /// - [onStepChanged]: Called when the user moves to a different step
+  /// - [onFinish]: Called when the user completes all steps
+  /// - [onSkip]: Called when the user skips the onboarding
+  ///
+  /// You can customize the skip confirmation sheet with [skipSheetTitle],
+  /// [skipSheetContinueButtonText], and [skipSheetSkipButtonText].
   void start(
     BuildContext context,
     List<OnboardingStep> onboardingSteps, {
@@ -102,6 +125,7 @@ class OnboardingService extends ChangeNotifier {
     });
   }
 
+  /// Advances to the next onboarding step, or finishes if on the last step.
   void next() {
     if (_currentIndex < steps.length - 1) {
       _tooltipPath = null;
@@ -114,6 +138,7 @@ class OnboardingService extends ChangeNotifier {
     }
   }
 
+  /// Shows the skip confirmation sheet to the user.
   void skip() => showSkipConfirmation();
 
   Future<void> showSkipConfirmation() async {
@@ -160,6 +185,7 @@ class OnboardingService extends ChangeNotifier {
     }
   }
 
+  /// Completes the onboarding flow and calls the [onFinish] callback.
   void finish() {
     _log('finish() called. active=$_isActive tooltipEntry=$_tooltipEntry');
     _cleanup();
@@ -170,6 +196,11 @@ class OnboardingService extends ChangeNotifier {
     callback?.call();
   }
 
+  /// Dismisses the onboarding without calling any callbacks.
+  ///
+  /// This is useful for cleaning up state when starting a new onboarding
+  /// or when the user navigates away. Set [shouldCleanSkip] to false to
+  /// preserve the skip callback.
   void dismissSilently({bool shouldCleanSkip = true}) {
     _log(
         'dismissSilently() called. active=$_isActive tooltipEntry=$_tooltipEntry');

@@ -9,7 +9,12 @@ import 'spotlight_painter.dart';
 import 'spotlight_target.dart';
 import 'spotlight_touch_layer.dart';
 
+/// Widget that renders a spotlight overlay with dimmed background and highlighted areas.
+///
+/// The overlay creates transparent "holes" around target widgets, allowing them
+/// to stand out while the rest of the screen is dimmed and blurred.
 class SpotlightOverlay extends StatefulWidget {
+  /// Creates a spotlight overlay.
   const SpotlightOverlay({
     Key? key,
     required this.targets,
@@ -18,15 +23,23 @@ class SpotlightOverlay extends StatefulWidget {
     this.extraHolePaths,
   }) : super(key: key);
 
+  /// The target widgets to highlight with transparent holes.
   final List<SpotlightTarget> targets;
+
+  /// Visual styling for the spotlight effect.
   final SpotlightStyle style;
+
+  /// Additional rectangular areas to keep transparent.
   final List<Rect>? extraHoles;
+
+  /// Additional custom-shaped areas to keep transparent.
   final List<Path>? extraHolePaths;
 
   @override
   SpotlightOverlayState createState() => SpotlightOverlayState();
 }
 
+/// State for [SpotlightOverlay] that manages animations and hole tracking.
 class SpotlightOverlayState extends State<SpotlightOverlay>
     with TickerProviderStateMixin {
   late final AnimationController _controller;
@@ -52,12 +65,7 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
     _blurAnimation = Tween<double>(
       begin: 0,
       end: widget.style.blurSigma,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateHoles();
@@ -82,13 +90,15 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
       final targetRender = targetContext?.findRenderObject();
       if (targetRender is! RenderBox || !targetRender.hasSize) continue;
 
-      final topLeft =
-          targetRender.localToGlobal(Offset.zero, ancestor: overlayBox);
+      final topLeft = targetRender.localToGlobal(
+        Offset.zero,
+        ancestor: overlayBox,
+      );
       final renderHeight = targetRender.size.height;
       final targetHeight =
           (target.maxHeight != null && target.maxHeight! < renderHeight)
-              ? target.maxHeight!
-              : renderHeight;
+          ? target.maxHeight!
+          : renderHeight;
 
       Rect rect = Rect.fromLTWH(
         topLeft.dx - target.padding.left,
@@ -113,17 +123,20 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
                 topLeft.dy - target.padding.top,
               ),
             )
-          : (Path()
-            ..addRRect(
+          : (Path()..addRRect(
               RRect.fromRectAndCorners(
                 rect,
-                topLeft: target.customBorderRadius?.topLeft ??
+                topLeft:
+                    target.customBorderRadius?.topLeft ??
                     Radius.circular(target.borderRadius),
-                topRight: target.customBorderRadius?.topRight ??
+                topRight:
+                    target.customBorderRadius?.topRight ??
                     Radius.circular(target.borderRadius),
-                bottomLeft: target.customBorderRadius?.bottomLeft ??
+                bottomLeft:
+                    target.customBorderRadius?.bottomLeft ??
                     Radius.circular(target.borderRadius),
-                bottomRight: target.customBorderRadius?.bottomRight ??
+                bottomRight:
+                    target.customBorderRadius?.bottomRight ??
                     Radius.circular(target.borderRadius),
               ),
             ));
@@ -174,6 +187,9 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
     }
   }
 
+  /// Hides the spotlight overlay with a reverse animation.
+  ///
+  /// This method should be called before removing the overlay from the widget tree.
   Future<void> hide() async {
     if (!_tracking) return;
     _tracking = false;
@@ -203,11 +219,7 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
         final screenPath = Path()..addRect(Offset.zero & size);
         var holesPath = Path();
         for (final hole in holes) {
-          holesPath = Path.combine(
-            PathOperation.union,
-            holesPath,
-            hole.path,
-          );
+          holesPath = Path.combine(PathOperation.union, holesPath, hole.path);
         }
         final overlayPath = Path.combine(
           PathOperation.difference,
@@ -230,8 +242,9 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
                           sigmaY: _blurAnimation.value,
                         ),
                         child: Container(
-                          color: widget.style.scrimColor
-                              .withOpacity(_opacityAnimation.value * 0.01),
+                          color: widget.style.scrimColor.withValues(
+                            alpha: _opacityAnimation.value * 0.01,
+                          ),
                         ),
                       ),
                     ),
@@ -242,18 +255,14 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
                     child: CustomPaint(
                       painter: SpotlightPainter(
                         holes: holes,
-                        scrimColor: widget.style.scrimColor.withOpacity(
-                          _opacityAnimation.value * 0.2,
+                        scrimColor: widget.style.scrimColor.withValues(
+                          alpha: _opacityAnimation.value * 0.2,
                         ),
                       ),
                     ),
                   ),
                 ),
-                Positioned.fill(
-                  child: SpotlightTouchLayer(
-                    holes: holes,
-                  ),
-                ),
+                Positioned.fill(child: SpotlightTouchLayer(holes: holes)),
               ],
             );
           },

@@ -3,12 +3,25 @@ import 'package:flutter/material.dart';
 import 'spotlight_overlay.dart';
 import 'spotlight_target.dart';
 
+/// Service that manages spotlight overlays to highlight specific UI elements.
+///
+/// The spotlight creates a dimmed overlay with transparent holes around
+/// target widgets, drawing user attention to specific parts of the interface.
 class SpotlightService extends ChangeNotifier {
   GlobalKey<SpotlightOverlayState>? _overlayKey;
   OverlayEntry? _overlayEntry;
 
+  /// Whether a spotlight overlay is currently being displayed.
   bool get isShowing => _overlayEntry != null;
 
+  /// Shows a spotlight overlay highlighting the given [targets].
+  ///
+  /// The [context] is used to insert the overlay. You can optionally provide
+  /// [extraHoles] or [extraHolePaths] to create additional transparent areas,
+  /// and customize the appearance with [style].
+  ///
+  /// If a spotlight is already showing, this method returns early without
+  /// making changes.
   Future<void> show(
     BuildContext context, {
     required List<SpotlightTarget> targets,
@@ -44,6 +57,9 @@ class SpotlightService extends ChangeNotifier {
     overlayState.insert(_overlayEntry!);
   }
 
+  /// Hides the currently displayed spotlight with an animation.
+  ///
+  /// If no spotlight is showing, this method returns early.
   Future<void> hide() async {
     if (_overlayEntry == null) {
       return;
