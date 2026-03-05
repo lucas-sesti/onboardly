@@ -16,7 +16,7 @@ A Flutter package for creating beautiful and customizable onboarding experiences
 ## Demo
 
 <div align="center">
-  <img src="https://res.cloudinary.com/seeken/image/upload/v1772667403/RocketSim_Recording_iPhone_Air_6.6_2026-03-05_00.35.40-ezgif.com-video-to-gif-converter_o0lvas.gif" alt="Onboardly Demo" width="300">
+  <img src="https://res.cloudinary.com/seeken/image/upload/v1772714402/RocketSim_Recording_iPhone_Air_6.6_2026-03-05_13.34.57-ezgif.com-video-to-gif-converter_mqg9x3.gif" alt="Onboardly Demo" width="300">
   <br/>
   <img src="https://res.cloudinary.com/seeken/image/upload/v1772667170/RocketSim_Screenshot_iPhone_Air_6.6_2026-03-05_00.07.35_lzadlj.jpg" alt="Onboardly Screenshot" width="300">
 </div>
@@ -223,6 +223,9 @@ Main service for managing onboarding flows.
   - `skipSheetTitle: String?` - Custom title for skip confirmation sheet
   - `skipSheetContinueButtonText: String?` - Custom text for continue button
   - `skipSheetSkipButtonText: String?` - Custom text for skip button
+  - `nextText: String` - Text for the next/confirm button (default: `'OK'`)
+  - `skipText: String` - Text for the skip button (default: `'Skip'`)
+  - `finishText: String` - Text for the finish button on last step (default: `'Finish'`)
 - `next()` - Move to next step
 - `skip()` - Skip onboarding with confirmation
 - `finish()` - Complete onboarding
@@ -250,15 +253,22 @@ Configuration for each onboarding step.
 
 ```dart
 OnboardingStep(
-  targetKey: GlobalKey,           // Required: Widget to highlight
-  description: String,             // Required: Description text
-  position: OnboardingTooltipPosition, // Required: Tooltip position
+  targetKey: GlobalKey,
+  description: String?,
+  descriptionWidget: Widget?,
+  position: OnboardingTooltipPosition,
+  showNext: bool,
+  showSkip: bool,
 )
 ```
 
+> **Note:** Either `description` or `descriptionWidget` must be provided. Only `targetKey` is required.
+
 **Tooltip Positions:**
+- `OnboardingTooltipPosition.auto` (default)
 - `OnboardingTooltipPosition.above`
 - `OnboardingTooltipPosition.below`
+- `OnboardingTooltipPosition.center`
 
 ### SpotlightTarget
 
@@ -287,6 +297,23 @@ SpotlightStyle(
   scrimColor: Color.fromARGB(60, 0, 0, 0), // Overlay color
   animationDuration: Duration(milliseconds: 300), // Animation duration
 )
+```
+
+### Localization / Custom Texts
+
+All button texts default to English and can be customized:
+
+```dart
+_onboardingService.start(
+  context,
+  steps,
+  nextText: 'Próximo',
+  skipText: 'Pular',
+  finishText: 'Finalizar',
+  skipSheetTitle: 'Deseja pular o tutorial?',
+  skipSheetContinueButtonText: 'Continuar tutorial',
+  skipSheetSkipButtonText: 'Pular tutorial',
+);
 ```
 
 ## Examples

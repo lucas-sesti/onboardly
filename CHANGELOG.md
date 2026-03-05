@@ -9,6 +9,7 @@
 * Add support for `RenderSliver` widgets (e.g., `SliverAppBar`, `SliverPersistentHeader`)
 * Spotlight and onboarding now work with widgets inside `NestedScrollView` and custom slivers
 * Improved render object type detection with fallback to ancestor `RenderBox` when needed
+* Add customizable tooltip button texts (`nextText`, `skipText`, `finishText`) with English defaults via `OnboardingService.start()`
 
 **Migration Guide:**
 

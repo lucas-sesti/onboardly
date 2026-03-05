@@ -36,6 +36,10 @@ class OnboardingService {
   String? _skipSheetContinueButtonText;
   String? _skipSheetSkipButtonText;
 
+  String _nextText = 'OK';
+  String _skipText = 'Skip';
+  String _finishText = 'Finish';
+
   OverlayEntry? _tooltipEntry;
 
   late List<OnboardingStep> steps;
@@ -82,6 +86,9 @@ class OnboardingService {
     String? skipSheetTitle,
     String? skipSheetContinueButtonText,
     String? skipSheetSkipButtonText,
+    String nextText = 'OK',
+    String skipText = 'Skip',
+    String finishText = 'Finish',
   }) {
     // Clean any previous onboarding to avoid duplicate GlobalKeys/overlays.
     dismissSilently();
@@ -98,6 +105,9 @@ class OnboardingService {
     _skipSheetTitle = skipSheetTitle;
     _skipSheetContinueButtonText = skipSheetContinueButtonText;
     _skipSheetSkipButtonText = skipSheetSkipButtonText;
+    _nextText = nextText;
+    _skipText = skipText;
+    _finishText = finishText;
     steps = onboardingSteps;
     if (steps.isEmpty) return;
 
@@ -245,6 +255,9 @@ class OnboardingService {
           onNext: next,
           onSkip: skip,
           onLayout: _updateTooltipRectFromContext,
+          nextText: _nextText,
+          skipText: _skipText,
+          finishText: _finishText,
         );
       },
     );
