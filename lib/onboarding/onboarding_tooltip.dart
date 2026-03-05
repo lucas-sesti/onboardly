@@ -26,6 +26,15 @@ class OnboardingTooltip extends StatefulWidget {
   /// Callback invoked when the user taps the "Skip" button.
   final VoidCallback onSkip;
 
+  /// Text displayed on the next/confirm button. Defaults to 'OK'.
+  final String nextText;
+
+  /// Text displayed on the skip button. Defaults to 'Skip'.
+  final String skipText;
+
+  /// Text displayed on the finish button (last step). Defaults to 'Finish'.
+  final String finishText;
+
   /// Optional callback that provides the tooltip's path for spotlight cutouts.
   final void Function(Path combinedPath)? onLayout;
 
@@ -39,6 +48,9 @@ class OnboardingTooltip extends StatefulWidget {
     required this.onNext,
     required this.onSkip,
     this.onLayout,
+    this.nextText = 'OK',
+    this.skipText = 'Skip',
+    this.finishText = 'Finish',
   });
 
   @override
@@ -137,6 +149,14 @@ class _OnboardingTooltipState extends State<OnboardingTooltip> {
             (spacing + arrowHeight) +
             extraOffset;
 
+        // debugPrint("- screenHeight: $screenHeight");
+        // debugPrint("- targetTop: ${widget.targetRect.top}");
+        // debugPrint("- targetBottom: ${widget.targetRect.bottom}");
+        // debugPrint("- spacing: $spacing");
+        // debugPrint("- arrowHeight: $arrowHeight");
+        // debugPrint("- extraOffset: $extraOffset");
+        // debugPrint("- bottomOffset: $bottomOffset");
+
         Widget descriptionContent = widget.step.descriptionWidget ??
             Text(
               widget.step.description ?? '',
@@ -160,7 +180,7 @@ class _OnboardingTooltipState extends State<OnboardingTooltip> {
                   child: GestureDetector(
                     onTap: widget.onNext,
                     child: Text(
-                      'OK',
+                      widget.nextText,
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.bold,
@@ -237,7 +257,7 @@ class _OnboardingTooltipState extends State<OnboardingTooltip> {
                                 ],
                               ),
                               child: Text(
-                                isLastStep ? 'Finalizar' : 'Pular',
+                                isLastStep ? widget.finishText : widget.skipText,
                                 style: TextStyle(
                                   color: Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.w600,
@@ -283,8 +303,8 @@ class _OnboardingTooltipState extends State<OnboardingTooltip> {
                   top: widget.showAbove ? null : topOffset,
                   bottom: widget.showAbove ? bottomOffset : null,
                   child: SafeArea(
-                    top: !widget.showAbove,
-                    bottom: widget.showAbove,
+                    top: widget.showAbove,
+                    bottom: !widget.showAbove,
                       child: ConstrainedBox(
                       constraints: BoxConstraints(
                         maxHeight: (() {

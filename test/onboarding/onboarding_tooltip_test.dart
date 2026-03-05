@@ -148,10 +148,10 @@ void main() {
         ),
       );
 
-      expect(find.text('Pular'), findsOneWidget);
+      expect(find.text('Skip'), findsOneWidget);
     });
 
-    testWidgets('should show Finalizar text on skip button when isLastStep is true', (tester) async {
+    testWidgets('should show Finish text on skip button when isLastStep is true', (tester) async {
       final step = OnboardingStep(
         targetKey: targetKey,
         description: 'Test',
@@ -175,8 +175,8 @@ void main() {
         ),
       );
 
-      expect(find.text('Finalizar'), findsOneWidget);
-      expect(find.text('Pular'), findsNothing);
+      expect(find.text('Finish'), findsOneWidget);
+      expect(find.text('Skip'), findsNothing);
     });
 
     testWidgets('should call onNext when OK button is tapped', (tester) async {
@@ -235,13 +235,13 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Pular'));
+      await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
 
       expect(skipCalled, true);
     });
 
-    testWidgets('should call onNext when Finalizar button is tapped on last step', (tester) async {
+    testWidgets('should call onNext when Finish button is tapped on last step', (tester) async {
       var nextCalled = false;
       final step = OnboardingStep(
         targetKey: targetKey,
@@ -266,7 +266,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Finalizar'));
+      await tester.tap(find.text('Finish'));
       await tester.pumpAndSettle();
 
       expect(nextCalled, true);
@@ -296,7 +296,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Pular'), findsNothing);
+      expect(find.text('Skip'), findsNothing);
     });
   });
 

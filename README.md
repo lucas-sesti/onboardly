@@ -7,11 +7,11 @@ A Flutter package for creating beautiful and customizable onboarding experiences
 - ✅ **Spotlight Effect** - Highlight specific UI elements with customizable overlays
 - ✅ **Interactive Tooltips** - Show descriptive tooltips with customizable positioning
 - ✅ **Step-by-step Onboarding** - Guide users through multiple steps
-- ✅ **Provider-based State Management** - Clean and testable architecture
+- ✅ **State Management Agnostic** - Works with any state management solution or none at all
 - ✅ **Fully Customizable** - Custom styles, colors, animations, and layouts
 - ✅ **Skip Confirmation** - Built-in bottom sheet for skip confirmation
 - ✅ **Callbacks** - Track onboarding progress with callbacks
-- ✅ **Zero External Dependencies** - Only uses Provider and Flutter SDK
+- ✅ **Zero External Dependencies** - Only uses Flutter SDK
 
 ## Demo
 
@@ -27,62 +27,47 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  onboardly: ^1.0.2
-  provider: ^6.1.2
+  onboardly: ^2.0.0
 ```
 
 ## Getting Started
 
-### 1. Setup Providers
+### 1. Create Services
 
-Wrap your `MaterialApp` with `MultiProvider`:
-
-```dart
-import 'package:provider/provider.dart';
-import 'package:onboardly/spotlight/spotlight_controller.dart';
-import 'package:onboardly/onboarding/onboarding_controller.dart';
-
-void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => SpotlightService()),
-        ChangeNotifierProvider(
-          create: (context) => OnboardingService(
-            context.read<SpotlightService>(),
-          ),
-        ),
-      ],
-      child: MyApp(),
-    ),
-  );
-}
-```
-
-### 2. Create GlobalKeys
-
-Create `GlobalKey`s for the widgets you want to highlight:
+Create instances of `SpotlightService` and `OnboardingService` in your widget state:
 
 ```dart
+import 'package:onboardly/onboardly.dart';
+
 class MyScreen extends StatefulWidget {
   @override
   State<MyScreen> createState() => _MyScreenState();
 }
 
 class _MyScreenState extends State<MyScreen> {
+  // Create services
+  late final SpotlightService _spotlightService;
+  late final OnboardingService _onboardingService;
+
+  // Create GlobalKeys for the widgets you want to highlight
   final GlobalKey _buttonKey = GlobalKey();
   final GlobalKey _titleKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _spotlightService = SpotlightService();
+    _onboardingService = OnboardingService(_spotlightService);
+  }
 
   // ... rest of your code
 }
 ```
 
-### 3. Start Onboarding
+### 2. Start Onboarding
 
 ```dart
 void _startOnboarding() {
-  final onboardingService = context.read<OnboardingService>();
-
   final steps = [
     OnboardingStep(
       targetKey: _titleKey,
@@ -96,7 +81,7 @@ void _startOnboarding() {
     ),
   ];
 
-  onboardingService.start(
+  _onboardingService.start(
     context,
     steps,
     onFinish: () => print('Onboarding finished!'),
@@ -110,7 +95,7 @@ void _startOnboarding() {
 ### Basic Onboarding
 
 ```dart
-import 'package:onboardly/onboarding/onboarding_step.dart';
+import 'package:onboardly/onboardly.dart';
 
 final steps = [
   OnboardingStep(
@@ -120,13 +105,13 @@ final steps = [
   ),
 ];
 
-context.read<OnboardingService>().start(context, steps);
+_onboardingService.start(context, steps);
 ```
 
 ### With Callbacks
 
 ```dart
-onboardingService.start(
+_onboardingService.start(
   context,
   steps,
   onStepChanged: (index) {
@@ -144,8 +129,6 @@ onboardingService.start(
 ### Spotlight Only (without tooltips)
 
 ```dart
-final spotlightService = context.read<SpotlightService>();
-
 final targets = [
   SpotlightTarget.fromKey(
     _myWidgetKey,
@@ -154,7 +137,7 @@ final targets = [
   ),
 ];
 
-await spotlightService.show(
+await _spotlightService.show(
   context,
   targets: targets,
   style: SpotlightStyle(
@@ -169,7 +152,7 @@ await spotlightService.show(
 You can customize the skip confirmation sheet texts directly when starting the onboarding:
 
 ```dart
-onboardingService.start(
+_onboardingService.start(
   context,
   steps,
   skipSheetTitle: 'Are you sure you want to skip?',
@@ -187,6 +170,42 @@ OnboardingSkipSheet(
   continueButtonWidget: MyCustomButton(),
   skipButtonWidget: MyCustomButton(),
 )
+```
+
+## State Management
+
+Onboardly is **completely state-management agnostic**. You can use it with:
+
+- **Local state** (StatefulWidget) - Simplest approach, recommended for most cases
+- **InheritedWidget** - For sharing services across multiple widgets
+- **Provider, Riverpod, Bloc, GetIt** - Any dependency injection or state management solution
+- **No state management** - Just create instances where needed
+
+The services are simple Dart classes with imperative APIs (`start()`, `next()`, `finish()`, etc.) and callbacks. They don't require any specific state management setup.
+
+### Example with GetIt
+
+```dart
+// Register services
+getIt.registerSingleton(SpotlightService());
+getIt.registerSingleton(OnboardingService(getIt<SpotlightService>()));
+
+// Use anywhere
+final onboarding = getIt<OnboardingService>();
+onboarding.start(context, steps);
+```
+
+### Example with Riverpod
+
+```dart
+final spotlightProvider = Provider((ref) => SpotlightService());
+final onboardingProvider = Provider((ref) =>
+  OnboardingService(ref.read(spotlightProvider))
+);
+
+// Use in widgets
+final onboarding = ref.read(onboardingProvider);
+onboarding.start(context, steps);
 ```
 
 ## API Reference

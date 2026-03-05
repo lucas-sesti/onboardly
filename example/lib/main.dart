@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:onboardly/spotlight/spotlight_controller.dart';
 import 'package:onboardly/spotlight/spotlight_target.dart';
 import 'package:onboardly/onboarding/onboarding_controller.dart';
 import 'package:onboardly/onboarding/onboarding_step.dart';
+import 'complex_example_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,26 +14,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Providers setup - REQUIRED to use the package
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => SpotlightService(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => OnboardingService(
-            context.read<SpotlightService>(),
-          ),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'Onboardly Example',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          useMaterial3: true,
-        ),
-        home: const ExampleScreen(),
+    return MaterialApp(
+      title: 'Onboardly Example',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
+      home: const ExampleScreen(),
     );
   }
 }
@@ -46,6 +33,10 @@ class ExampleScreen extends StatefulWidget {
 }
 
 class _ExampleScreenState extends State<ExampleScreen> {
+  // Services - create instances directly
+  late final SpotlightService _spotlightService;
+  late final OnboardingService _onboardingService;
+
   // GlobalKeys to identify widgets that will be highlighted
   final GlobalKey _appBarKey = GlobalKey();
   final GlobalKey _fabKey = GlobalKey();
@@ -55,6 +46,13 @@ class _ExampleScreenState extends State<ExampleScreen> {
   final GlobalKey _cardKey = GlobalKey();
 
   int _counter = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _spotlightService = SpotlightService();
+    _onboardingService = OnboardingService(_spotlightService);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +151,25 @@ class _ExampleScreenState extends State<ExampleScreen> {
                 padding: const EdgeInsets.all(16),
               ),
             ),
+            const SizedBox(height: 8),
+
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ComplexExampleScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.layers),
+              label: const Text('Complex Layout Examples'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+                backgroundColor: Colors.deepPurple.shade100,
+                foregroundColor: Colors.deepPurple.shade900,
+              ),
+            ),
             const SizedBox(height: 24),
 
             // Package information
@@ -209,8 +226,6 @@ class _ExampleScreenState extends State<ExampleScreen> {
 
   /// Example 1: Complete onboarding with all elements
   void _startFullOnboarding() {
-    final onboardingService = context.read<OnboardingService>();
-
     final steps = [
       OnboardingStep(
         targetKey: _appBarKey,
@@ -250,18 +265,18 @@ class _ExampleScreenState extends State<ExampleScreen> {
       ),
     ];
 
-    onboardingService.start(
+    _onboardingService.start(
       context,
       steps,
       onStepChanged: (index) {
-        debugPrint('📍 Changed to step: $index');
+        // debugPrint('📍 Changed to step: $index');
       },
       onFinish: () {
-        debugPrint('✅ Onboarding finished!');
+        // debugPrint('✅ Onboarding finished!');
         _showSnackBar('Tutorial complete! 🎉');
       },
       onSkip: () {
-        debugPrint('⏭️ Onboarding skipped!');
+        // debugPrint('⏭️ Onboarding skipped!');
         _showSnackBar('Tutorial skipped');
       },
       // Skip sheet customization
@@ -273,8 +288,6 @@ class _ExampleScreenState extends State<ExampleScreen> {
 
   /// Example 2: Quick onboarding with only 2 steps
   void _startQuickOnboarding() {
-    final onboardingService = context.read<OnboardingService>();
-
     final steps = [
       OnboardingStep(
         targetKey: _cardKey,
@@ -288,7 +301,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
       ),
     ];
 
-    onboardingService.start(
+    _onboardingService.start(
       context,
       steps,
       onFinish: () => _showSnackBar('Quick tutorial completed! ⚡'),
@@ -302,8 +315,6 @@ class _ExampleScreenState extends State<ExampleScreen> {
 
   /// Example 3: Use only the spotlight without tooltip
   void _showSpotlightOnly() async {
-    final spotlightService = context.read<SpotlightService>();
-
     // Create targets using GlobalKeys
     final targets = [
       SpotlightTarget.fromKey(
@@ -318,7 +329,7 @@ class _ExampleScreenState extends State<ExampleScreen> {
       ),
     ];
 
-    await spotlightService.show(
+    await _spotlightService.show(
       context,
       targets: targets,
       style: const SpotlightStyle(
@@ -332,8 +343,8 @@ class _ExampleScreenState extends State<ExampleScreen> {
 
     // Auto-close after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
-      if (spotlightService.isShowing) {
-        spotlightService.hide();
+      if (_spotlightService.isShowing) {
+        _spotlightService.hide();
       }
     });
   }

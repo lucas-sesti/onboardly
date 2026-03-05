@@ -7,7 +7,7 @@ import 'spotlight_target.dart';
 ///
 /// The spotlight creates a dimmed overlay with transparent holes around
 /// target widgets, drawing user attention to specific parts of the interface.
-class SpotlightService extends ChangeNotifier {
+class SpotlightService {
   GlobalKey<SpotlightOverlayState>? _overlayKey;
   OverlayEntry? _overlayEntry;
 

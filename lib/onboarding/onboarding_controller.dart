@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../spotlight/spotlight_controller.dart';
 import '../spotlight/spotlight_target.dart';
@@ -14,7 +15,7 @@ import 'onboarding_tooltip.dart';
 /// This service orchestrates the display of onboarding steps, each with a
 /// spotlight effect highlighting specific UI elements and tooltips providing
 /// contextual information to users.
-class OnboardingService extends ChangeNotifier {
+class OnboardingService {
   /// Creates an [OnboardingService] with the given [spotlight] service.
   OnboardingService(this.spotlight);
 
@@ -102,7 +103,6 @@ class OnboardingService extends ChangeNotifier {
 
     _currentIndex = 0;
     _isActive = true;
-    notifyListeners();
     _installGlobalKeyDebugHook();
     _currentTargetRect = _measureTargetRect(currentStep.targetKey);
     if (_currentTargetRect != null) {
@@ -176,7 +176,8 @@ class OnboardingService extends ChangeNotifier {
       );
       if (_currentTargetRect == null) {
         _log(
-            'showSkipConfirmation(): target not ready after cancel skip, waiting asynchronously');
+          'showSkipConfirmation(): target not ready after cancel skip, waiting asynchronously',
+        );
         _waitForTargetAndShow();
         return;
       }
@@ -203,7 +204,8 @@ class OnboardingService extends ChangeNotifier {
   /// preserve the skip callback.
   void dismissSilently({bool shouldCleanSkip = true}) {
     _log(
-        'dismissSilently() called. active=$_isActive tooltipEntry=$_tooltipEntry');
+      'dismissSilently() called. active=$_isActive tooltipEntry=$_tooltipEntry',
+    );
     _cleanup();
     _onFinish = null;
     if (shouldCleanSkip) {
@@ -216,7 +218,6 @@ class OnboardingService extends ChangeNotifier {
     _hideSpotlight();
     _removeTooltip();
     _isActive = false;
-    notifyListeners();
     _tooltipPath = null;
     _isSpotlightTransitioning = false;
     _hasPendingSpotlightRefresh = false;
@@ -275,7 +276,9 @@ class OnboardingService extends ChangeNotifier {
     _tooltipEntry = null;
   }
 
-  void _log(String message) {}
+  void _log(String message) {
+    // debugPrint('[ONBOARDING] $message');
+  }
 
   void _installGlobalKeyDebugHook() {
     if (_originalOnError != null) return;
@@ -283,24 +286,24 @@ class OnboardingService extends ChangeNotifier {
     FlutterError.onError = (FlutterErrorDetails details) {
       final message = details.exceptionAsString();
       if (message.contains('Multiple widgets used the same GlobalKey')) {
-        debugPrint('[SPOTLIGHT][GLOBAL_KEY_ERROR] $message');
+        // debugPrint('[SPOTLIGHT][GLOBAL_KEY_ERROR] $message');
         if (details.stack != null) {
-          debugPrint(
-            '[SPOTLIGHT][GLOBAL_KEY_ERROR] stack:\n${details.stack}',
-          );
+          debugPrint('[SPOTLIGHT][GLOBAL_KEY_ERROR] stack:\n${details.stack}');
         }
         // Try to extract more info from diagnostics.
         final exception = details.exception;
         if (exception is FlutterError) {
           for (final diag in exception.diagnostics) {
             debugPrint(
-                '[SPOTLIGHT][GLOBAL_KEY_ERROR] diag: ${diag.toStringDeep()}');
+              '[SPOTLIGHT][GLOBAL_KEY_ERROR] diag: ${diag.toStringDeep()}',
+            );
           }
         }
         if (details.informationCollector != null) {
           for (final info in details.informationCollector!()) {
             debugPrint(
-                '[SPOTLIGHT][GLOBAL_KEY_ERROR] info: ${info.toDescription()}');
+              '[SPOTLIGHT][GLOBAL_KEY_ERROR] info: ${info.toDescription()}',
+            );
           }
         }
         if (steps.isNotEmpty) {
@@ -319,16 +322,88 @@ class OnboardingService extends ChangeNotifier {
 
   Rect? _measureTargetRect(GlobalKey key) {
     final ctx = key.currentContext;
-    final box = ctx?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return null;
-    final offset = box.localToGlobal(Offset.zero);
-    return offset & box.size;
+    final renderObject = ctx?.findRenderObject();
+    if (renderObject == null) return null;
+
+    if (renderObject is RenderBox) {
+      if (!renderObject.hasSize) return null;
+      final offset = renderObject.localToGlobal(Offset.zero);
+      return offset & renderObject.size;
+    } else if (renderObject is RenderSliver) {
+      return _measureSliverRect(renderObject);
+    } else {
+      final ancestorBox = _findAncestorRenderBox(ctx);
+      if (ancestorBox != null && ancestorBox.hasSize) {
+        final offset = ancestorBox.localToGlobal(Offset.zero);
+        return offset & ancestorBox.size;
+      }
+      return null;
+    }
   }
 
-  Future<Rect?> _waitForTargetRect(
-    GlobalKey key, {
-    int maxFrames = 12,
-  }) async {
+  Rect? _measureSliverRect(RenderSliver sliver) {
+    final geometry = sliver.geometry;
+    if (geometry == null) return null;
+
+    // debugPrint('geometry: $geometry');
+    // debugPrint('sliver: $sliver');
+
+    final viewport = _findAncestorViewport(sliver);
+    if (viewport == null) return null;
+
+    // debugPrint('viewport: $viewport');
+
+    final paintOrigin = geometry.paintOrigin;
+    final mainAxisExtent = geometry.paintExtent;
+    final crossAxisExtent = sliver.constraints.crossAxisExtent;
+
+    // debugPrint('paintOrigin: $paintOrigin');
+    // debugPrint('mainAxisExtent: $mainAxisExtent');
+    // debugPrint('crossAxisExtent: $crossAxisExtent');
+
+    final paintBounds = Rect.fromLTWH(
+      viewport.axis == Axis.vertical ? 0 : paintOrigin,
+      viewport.axis == Axis.vertical ? paintOrigin : 0,
+      viewport.axis == Axis.vertical ? crossAxisExtent : mainAxisExtent,
+      viewport.axis == Axis.vertical ? mainAxisExtent : crossAxisExtent,
+    );
+
+    // debugPrint('paintBounds: $paintBounds');
+
+    final matrix = sliver.getTransformTo(null);
+    final transformedRect = MatrixUtils.transformRect(matrix, paintBounds);
+
+    // debugPrint('transformedRect: $transformedRect');
+
+    return transformedRect;
+  }
+
+  RenderBox? _findAncestorRenderBox(BuildContext? context) {
+    if (context == null) return null;
+    RenderBox? box;
+    context.visitAncestorElements((element) {
+      final renderObject = element.renderObject;
+      if (renderObject is RenderBox) {
+        box = renderObject;
+        return false;
+      }
+      return true;
+    });
+    return box;
+  }
+
+  RenderViewport? _findAncestorViewport(RenderObject renderObject) {
+    RenderObject? current = renderObject.parent;
+    while (current != null) {
+      if (current is RenderViewport) {
+        return current;
+      }
+      current = current.parent;
+    }
+    return null;
+  }
+
+  Future<Rect?> _waitForTargetRect(GlobalKey key, {int maxFrames = 12}) async {
     var rect = _measureTargetRect(key);
     if (rect != null) return rect;
 
@@ -382,7 +457,8 @@ class OnboardingService extends ChangeNotifier {
       do {
         _hasPendingSpotlightRefresh = false;
         _log(
-            '_refreshSpotlight(): target=${currentStep.targetKey} extraHole=${_tooltipPath?.getBounds()}');
+          '_refreshSpotlight(): target=${currentStep.targetKey} extraHole=${_tooltipPath?.getBounds()}',
+        );
         _currentTargetRect = await _waitForTargetRect(
           currentStep.targetKey,
           maxFrames: 20,
@@ -392,7 +468,8 @@ class OnboardingService extends ChangeNotifier {
           targetNullRetries++;
           if (targetNullRetries > 120) {
             _log(
-                '_refreshSpotlight(): target rect null after retries, aborting');
+              '_refreshSpotlight(): target rect null after retries, aborting',
+            );
             return;
           }
           _log('_refreshSpotlight(): target rect null, retrying next frame');
@@ -412,7 +489,8 @@ class OnboardingService extends ChangeNotifier {
           final maxHeight = currentStep.maxHeights?[key];
           final customWidth = currentStep.customWidths?[key];
           final borderRadius = currentStep.borderRadii?[key];
-          final horizontalPadding = currentStep.spotlightHorizontalPadding ??
+          final horizontalPadding =
+              currentStep.spotlightHorizontalPadding ??
               _defaultSpotlightHorizontalPadding;
           return SpotlightTarget.fromKey(
             key,

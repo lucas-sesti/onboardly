@@ -1,5 +1,4 @@
 export 'onboarding/onboarding_controller.dart';
-export 'onboarding/onboarding_overlay.dart';
 export 'onboarding/onboarding_skip_sheet.dart';
 export 'onboarding/onboarding_step.dart';
 export 'onboarding/onboarding_tooltip.dart';

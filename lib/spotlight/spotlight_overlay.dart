@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:flutter/rendering.dart';
 
 import 'spotlight_painter.dart';
 import 'spotlight_target.dart';
@@ -50,6 +51,7 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
   List<SpotlightHole> _lastHoles = const [];
 
   bool _tracking = true;
+  Timer? _updateTimer;
 
   @override
   void initState() {
@@ -70,16 +72,24 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateHoles();
       _controller.forward();
+      _startTracking();
     });
-    SchedulerBinding.instance.addPersistentFrameCallback(_handleFrame);
   }
 
-  void _handleFrame(Duration timestamp) {
-    if (!_tracking || !mounted) return;
-    _updateHoles();
+  void _startTracking() {
+    _updateTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (!mounted) {
+        _updateTimer?.cancel();
+        return;
+      }
+      if (_tracking) {
+        _updateHoles();
+      }
+    });
   }
 
   void _updateHoles() {
+    if (!mounted) return;
     final overlayBox = context.findRenderObject() as RenderBox?;
     if (overlayBox == null || !overlayBox.hasSize) return;
 
@@ -88,13 +98,28 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
     for (final target in widget.targets) {
       final targetContext = target.key.currentContext;
       final targetRender = targetContext?.findRenderObject();
-      if (targetRender is! RenderBox || !targetRender.hasSize) continue;
+      if (targetRender == null) continue;
 
-      final topLeft = targetRender.localToGlobal(
-        Offset.zero,
-        ancestor: overlayBox,
-      );
-      final renderHeight = targetRender.size.height;
+      Offset topLeft;
+      Size targetSize;
+
+      if (targetRender is RenderBox) {
+        if (!targetRender.hasSize) continue;
+        topLeft = targetRender.localToGlobal(
+          Offset.zero,
+          ancestor: overlayBox,
+        );
+        targetSize = targetRender.size;
+      } else if (targetRender is RenderSliver) {
+        final sliverRect = _measureSliverRect(targetRender, overlayBox);
+        if (sliverRect == null) continue;
+        topLeft = sliverRect.topLeft;
+        targetSize = sliverRect.size;
+      } else {
+        continue;
+      }
+
+      final renderHeight = targetSize.height;
       final targetHeight =
           (target.maxHeight != null && target.maxHeight! < renderHeight)
           ? target.maxHeight!
@@ -103,7 +128,7 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
       Rect rect = Rect.fromLTWH(
         topLeft.dx - target.padding.left,
         topLeft.dy - target.padding.top,
-        targetRender.size.width + target.padding.horizontal,
+        targetSize.width + target.padding.horizontal,
         targetHeight + target.padding.vertical,
       );
 
@@ -176,15 +201,39 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
     }
 
     if (!listEquals(_lastHoles, resolvedHoles)) {
-      debugPrint(
-        '[SPOTLIGHT] _updateHoles -> targets=${widget.targets.length} extra=${widget.extraHoles?.length ?? 0} holes=${resolvedHoles.length}',
-      );
       _lastHoles = resolvedHoles;
-      _holes.value = resolvedHoles;
-
-      // Only request a new frame when something actually changed
-      SchedulerBinding.instance.scheduleFrame();
+      if (mounted) {
+        _holes.value = resolvedHoles;
+      }
     }
+  }
+
+  Rect? _measureSliverRect(RenderSliver sliver, RenderBox ancestor) {
+    final geometry = sliver.geometry;
+    if (geometry == null) return null;
+
+    final mainAxisExtent = geometry.paintExtent;
+    final crossAxisExtent = sliver.constraints.crossAxisExtent;
+
+    RenderObject? current = sliver.parent;
+    Axis axis = Axis.vertical;
+    while (current != null) {
+      if (current is RenderViewport) {
+        axis = current.axis;
+        break;
+      }
+      current = current.parent;
+    }
+
+    final paintBounds = Rect.fromLTWH(
+      axis == Axis.vertical ? 0 : geometry.paintOrigin,
+      axis == Axis.vertical ? geometry.paintOrigin : 0,
+      axis == Axis.vertical ? crossAxisExtent : mainAxisExtent,
+      axis == Axis.vertical ? mainAxisExtent : crossAxisExtent,
+    );
+
+    final matrix = sliver.getTransformTo(ancestor);
+    return MatrixUtils.transformRect(matrix, paintBounds);
   }
 
   /// Hides the spotlight overlay with a reverse animation.
@@ -193,18 +242,14 @@ class SpotlightOverlayState extends State<SpotlightOverlay>
   Future<void> hide() async {
     if (!_tracking) return;
     _tracking = false;
-    if (_controller.isAnimating) {
-      await _controller.reverse();
-      return;
-    }
-    try {
-      await _controller.reverse();
-    } catch (_) {}
+    _updateTimer?.cancel();
+    _controller.reverse();
   }
 
   @override
   void dispose() {
     _tracking = false;
+    _updateTimer?.cancel();
     _holes.dispose();
     _controller.dispose();
     super.dispose();

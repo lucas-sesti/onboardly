@@ -1,0 +1,30 @@
+# Build artifacts
+build/
+.dart_tool/
+
+# IDE
+.idea/
+*.iml
+
+# Platform-specific (example app)
+example/android/
+example/ios/
+example/linux/
+example/macos/
+example/web/
+example/windows/
+example/build/
+example/.dart_tool/
+
+# Git
+.git/
+
+# Generated
+pubspec.lock
+example/pubspec.lock
+.metadata
+example/.metadata
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies

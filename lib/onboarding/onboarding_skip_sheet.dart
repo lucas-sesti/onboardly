@@ -34,7 +34,7 @@ class OnboardingSkipSheet extends StatelessWidget {
         children: [
           titleWidget ??
               Text(
-                title ?? 'Tem certeza que deseja pular o tutorial?',
+                title ?? 'Are you sure you want to skip the tutorial?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -57,7 +57,7 @@ class OnboardingSkipSheet extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    continueButtonText ?? 'Continuar tutorial',
+                    continueButtonText ?? 'Continue tutorial',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -76,7 +76,7 @@ class OnboardingSkipSheet extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Text(
-                    skipButtonText ?? 'Pular tutorial',
+                    skipButtonText ?? 'Skip tutorial',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

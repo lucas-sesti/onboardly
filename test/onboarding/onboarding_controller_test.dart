@@ -268,15 +268,6 @@ void main() {
       expect(find.text('Skip Custom'), findsOneWidget);
     });
 
-    test('should notify listeners when state changes', () {
-      var notified = false;
-      service.addListener(() => notified = true);
-
-      service.notifyListeners();
-
-      expect(notified, true);
-    });
-
     testWidgets('should clean up previous onboarding when starting new one', (tester) async {
       final key1 = GlobalKey();
       final key2 = GlobalKey();
