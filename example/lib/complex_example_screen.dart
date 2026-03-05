@@ -41,6 +41,7 @@ class _ComplexExampleScreenState extends State<ComplexExampleScreen>
 
   @override
   void dispose() {
+    _onboardingService.dismissSilently();
     _tabController.dispose();
     super.dispose();
   }
@@ -55,7 +56,7 @@ class _ComplexExampleScreenState extends State<ComplexExampleScreen>
               expandedHeight: 200,
               floating: false,
               pinned: true,
-              key: _appBarTitleKey,
+              key: _appBarTitleKey, 
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
                   'Complex Layout Demo',
